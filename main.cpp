@@ -3,17 +3,17 @@
 #include <sstream>
 using namespace std;
 
+int ** Create_Matrix(int stroki,int stolbi){
+    int **New_Matrix = new int *[stroki];
+    for (int i=0;i<stroki;i++){
+        New_Matrix[i]=new int [stolbi];
+    }
+    return New_Matrix;
+}
+
 class matrix_t{
     unsigned int stroki,stolbi;
     int **data;
-    
-    int ** Create_Matrix(int stroki,int stolbi){
-        int **New_Matrix = new int *[stroki];
-        for (int i=0;i<stroki;i++){
-            New_Matrix[i]=new int [stolbi];
-        }
-        return New_Matrix;
-    }
     
 public:
     //constructor & destructor
@@ -31,17 +31,17 @@ public:
         
     }
     //Copy constructor
-   /*matrix_t(const matrix_t & object){
-     stroki=object.stroki;
-     stolbi=object.stolbi;
-     data=Create_Matrix(stroki, stolbi);
+    matrix_t(const matrix_t & object){
+        stroki=object.stroki;
+        stolbi=object.stolbi;
+        data=Create_Matrix(stroki, stolbi);
         for ( int i = 0; i < stroki; ++i){
             for ( int j = 0; j < stolbi; ++j){
                 data[i][j] = object.data[i][j];
             }
         }
+        cout<<"Copy_constructor"<<'\n';
     }
-    */
     //methods
     ifstream & read( ifstream & stream )
     {   string size_mat;
@@ -58,7 +58,7 @@ public:
         return stream;
     }
     
-    void Zapolnenie_mat(ifstream &file,int stroki_in,int stolbi_in,int **&data){
+    void Zapolnenie_mat(ifstream &file,int stroki_in,int stolbi_in,int **data){
         for (int i = 0 ; i<stroki_in; i++) {
             string stroka;
             getline(file, stroka);
@@ -85,7 +85,7 @@ public:
         return stream1;
     }
     
-    matrix_t add ( matrix_t & other)
+    matrix_t add ( matrix_t & other) const
     {
         matrix_t result(stroki,stolbi);
         for (int i = 0; i< stroki; i++) {
@@ -95,7 +95,7 @@ public:
         }
         return result;
     }
-    matrix_t sub ( matrix_t & other)
+    matrix_t sub ( matrix_t & other) const
     {
         matrix_t result(stroki,stolbi);
         for (int i = 0; i< stroki; i++) {
@@ -105,7 +105,7 @@ public:
         }
         return result;
     }
-    matrix_t mul ( matrix_t & other)
+    matrix_t mul ( matrix_t & other) const
     {
         matrix_t result(stroki,other.stolbi);
         for (int i = 0; i<stroki; i++) {
@@ -119,7 +119,7 @@ public:
         return result;
     }
     
-    matrix_t trans ()
+    matrix_t trans () const
     {
         matrix_t result(stolbi,stroki);
         for(int i = 0; i<stolbi; i++){
@@ -135,7 +135,10 @@ public:
     unsigned int Get_Stolbi(){
         return stolbi;
     }
+    
 };
+
+
 bool get_name_matr(ifstream &f1,ifstream &f2,string &name_file1,string &name_file2,char &op){
     string enter;
     getline(cin,enter);
@@ -161,15 +164,18 @@ bool get_name_matr(ifstream &f1,ifstream &f2,string &name_file1,string &name_fil
         f1.open(name_file1);
     }
     if(name_file2!=""){
-       f2.open(name_file2);
+        f2.open(name_file2);
     }
     if(f1.is_open()&&(op=='T'))  return true;
-else if(f1.is_open()&&f2.is_open()) return true;
-else return false;
+    else if(f1.is_open()&&f2.is_open()) return true;
+    else return false;
 }
 
 
 int main() {
+    
+    
+    
     matrix_t a(0,0),b(0,0);
     ifstream f1,f2;
     string name_file1="";
@@ -183,9 +189,10 @@ int main() {
         case '+':{
             a.read(f1);
             b.read(f2);
+            
             if (a.Get_Stolbi()==b.Get_Stolbi() && a.Get_Stroki()==b.Get_Stroki()) {
-            matrix_t c=(a.add(b));
-            c.write(cout);
+                matrix_t c=a.add(b);
+                c.write(cout);
             }
             else  cout<<"An error has occured while reading input data"<<'\n';
         }
@@ -194,8 +201,8 @@ int main() {
             a.read(f1);
             b.read(f2);
             if (a.Get_Stolbi()==b.Get_Stolbi() && a.Get_Stroki()==b.Get_Stroki()) {
-            matrix_t c=(a.sub(b));
-            c.write(cout);
+                matrix_t c=(a.sub(b));
+                c.write(cout);
             }
             else  cout<<"An error has occured while reading input data"<<'\n';
         }
@@ -204,8 +211,8 @@ int main() {
             a.read(f1);
             b.read(f2);
             if(a.Get_Stolbi()==b.Get_Stroki()){
-            matrix_t c=(a.mul(b));
-            c.write(cout);
+                matrix_t c=(a.mul(b));
+                c.write(cout);
             }
             else  cout<<"An error has occured while reading input data"<<'\n';
         }
@@ -217,9 +224,10 @@ int main() {
         }
             break;
         default:
-    cout<<"An error has occured while reading input data"<<'\n';
+            cout<<"An error has occured while reading input data"<<'\n';
             break;
-         
+            
     }
     return 0;
 }
+
