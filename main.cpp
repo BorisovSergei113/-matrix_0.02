@@ -1,233 +1,241 @@
-#include <iostream>
-#include <fstream>
+#define CATCH_CONFIG_MAIN
 #include <sstream>
-using namespace std;
+#include "catch.hpp"
+#include "matrix_t.h"
 
-int ** Create_Matrix(int stroki,int stolbi){
-    int **New_Matrix = new int *[stroki];
-    for (int i=0;i<stroki;i++){
-        New_Matrix[i]=new int [stolbi];
-    }
-    return New_Matrix;
+
+TEST_CASE("creating matrix")
+{
+    matrix_t matrix;
+    REQUIRE( matrix.Get_Stroki() == 0 );
+    REQUIRE( matrix.Get_Stolbi() == 0 );
 }
 
-class matrix_t{
-    unsigned int stroki,stolbi;
-    int **data;
+TEST_CASE("reading matrix")
+{
+    string input{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix;
+    istringstream istream{ input };
     
-public:
-    //constructor & destructor
-    matrix_t(int in_stroki,int in_stolbi){
-        stroki=in_stroki;
-        stolbi=in_stolbi;
-        data = Create_Matrix(stroki, stolbi);
-    }
-    ~matrix_t(){
-        for (int i=0; i<stroki; i++){
-            delete[] data[i];
-        }
-        delete[] data;
-        cout<<"DESTRUCTOR"<<'\n';
-        
-    }
-    //Copy constructor
-    matrix_t(const matrix_t & object){
-        stroki=object.stroki;
-        stolbi=object.stolbi;
-        data=Create_Matrix(stroki, stolbi);
-        for ( int i = 0; i < stroki; ++i){
-            for ( int j = 0; j < stolbi; ++j){
-                data[i][j] = object.data[i][j];
-            }
-        }
-        cout<<"Copy_constructor"<<'\n';
-    }
-    //methods
-    ifstream & read( ifstream & stream )
-    {   string size_mat;
-        char symbol=',';
-        getline(stream, size_mat);
-        istringstream str(size_mat);
-        if(str>>stroki && str>>symbol && str>>stolbi){
-            data = Create_Matrix(stroki, stolbi);
-            Zapolnenie_mat(stream, stroki, stolbi, data);
-        }
-        else{
-            cout<<"An error has occured while reading input data"<<'\n';
-        }
-        return stream;
-    }
+    REQUIRE( matrix.read( istream ) );
+    REQUIRE( matrix.Get_Stroki()== 3 );
+    REQUIRE( matrix.Get_Stolbi() == 3 );
     
-    void Zapolnenie_mat(ifstream &file,int stroki_in,int stolbi_in,int **data){
-        for (int i = 0 ; i<stroki_in; i++) {
-            string stroka;
-            getline(file, stroka);
-            istringstream str (stroka);
-            for (int j = 0; j<stolbi_in; j++) {
-                if (!(str>>data[i][j])) {
-                    break;
-                }
-            }
-        }
-    }
+    ostringstream ostream;
+    matrix.write( ostream );
     
-    ostream & write(ostream & stream1) {
-        ofstream file3("Result.txt");
-        file3<<stroki<<","<<stolbi<<endl;
-        for (int i = 0; i<stroki; i++) {
-            for (int j = 0; j<stolbi; j++) {
-                stream1<<data[i][j]<<" ";
-                file3<<data[i][j]<<" ";
-            }
-            stream1<<'\n';
-            file3<<'\n';
-        }
-        return stream1;
-    }
-    
-    matrix_t add ( matrix_t & other) const
-    {
-        matrix_t result(stroki,stolbi);
-        for (int i = 0; i< stroki; i++) {
-            for (int j = 0 ; j< stolbi; j++) {
-                result.data[i][j]=data[i][j]+other.data [i][j];
-            }
-        }
-        return result;
-    }
-    matrix_t sub ( matrix_t & other) const
-    {
-        matrix_t result(stroki,stolbi);
-        for (int i = 0; i< stroki; i++) {
-            for (int j = 0 ; j< stolbi; j++) {
-                result.data[i][j]=data[i][j]-other.data [i][j];
-            }
-        }
-        return result;
-    }
-    matrix_t mul ( matrix_t & other) const
-    {
-        matrix_t result(stroki,other.stolbi);
-        for (int i = 0; i<stroki; i++) {
-            for (int j = 0; j<other.stolbi; j++) {
-                result.data[i][j] = 0;
-                for (int h = 0; h<stolbi; h++) {
-                    result.data[i][j] += data[i][h]*other.data[h][j];
-                }
-            }
-        }
-        return result;
-    }
-    
-    matrix_t trans () const
-    {
-        matrix_t result(stolbi,stroki);
-        for(int i = 0; i<stolbi; i++){
-            for(int j = 0; j<stroki; j++){
-                result.data[i][j] = data[j][i];
-            }
-        }
-        return result;
-    }
-    unsigned int Get_Stroki(){
-        return stroki;
-    }
-    unsigned int Get_Stolbi(){
-        return stolbi;
-    }
-    
-};
-
-
-bool get_name_matr(ifstream &f1,ifstream &f2,string &name_file1,string &name_file2,char &op){
-    string enter;
-    getline(cin,enter);
-    istringstream file(enter);
-    char op2;
-    while (file>>op2) {
-        if(op2!='+' && op2!='-' && op2!='*' && op2!='T'){
-            name_file1+=op2;
-        }
-        if (op2=='+' || op2=='-' || op2=='*'|| op2=='T') {
-            op=op2;
-            if (op2=='T') break;
-            while (file>>op2) {
-                if(op2!='+' && op2!='-' && op2!='*' && op2!='T'){
-                    name_file2+=op2;
-                }
-                else return false;
-            }
-            break;
-        }
-    }
-    if(name_file1!=""){
-        f1.open(name_file1);
-    }
-    if(name_file2!=""){
-        f2.open(name_file2);
-    }
-    if(f1.is_open()&&(op=='T'))  return true;
-    else if(f1.is_open()&&f2.is_open()) return true;
-    else return false;
+    REQUIRE( input == ostream.str() );
 }
 
+TEST_CASE("add matrix")
+{
+    string input1{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix1;
+    istringstream istream1{ input1 };
+    string input2{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix2;
+    istringstream istream2{ input2 };
+    string input3{
+        "3,3\n"
+        "2 2 2\n"
+        "4 4 4\n"
+        "6 6 6" };
+    matrix_t matrix3;
+    istringstream istream3{ input3 };
+    
+    matrix1.read(istream1);
+    matrix2.read(istream2);
+    matrix3=matrix1+matrix2;
+    REQUIRE( matrix3.Get_Stroki()== 3 );
+    REQUIRE( matrix3.Get_Stolbi() == 3 );
+    
+    ostringstream ostream;
+    matrix3.write( ostream );
+    
+    REQUIRE( input3 == ostream.str());
+}
+TEST_CASE("a-b matrix")
+{
+    string input1{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix1;
+    istringstream istream1{ input1 };
+    string input2{
+        "3,3\n"
+        "4 4 4\n"
+        "5 5 5\n"
+        "2 2 2" };
+    matrix_t matrix2;
+    istringstream istream2{ input2 };
+    string input3{
+        "3,3\n"
+        "-3 -3 -3\n"
+        "-3 -3 -3\n"
+        "1 1 1" };
+    matrix_t matrix3;
+    istringstream istream3{ input3 };
+    
+    matrix1.read(istream1);
+    matrix2.read(istream2);
+    matrix3=matrix1-matrix2;
+    REQUIRE( matrix3.Get_Stroki()== 3 );
+    REQUIRE( matrix3.Get_Stolbi() == 3 );
+    
+    ostringstream ostream;
+    matrix3.write( ostream );
+    
+    REQUIRE( input3 == ostream.str());
+}
+TEST_CASE("a*b matrix")
+{
+    string input1{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix1;
+    istringstream istream1{ input1 };
+    string input2{
+        "3,1\n"
+        "4\n"
+        "5\n"
+        "2" };
+    matrix_t matrix2;
+    istringstream istream2{ input2 };
+    string input3{
+        "3,1\n"
+        "11 \n"
+        "22 \n"
+        "33 " };
+    matrix_t matrix3;
+    istringstream istream3{ input3 };
+    
+    matrix1.read(istream1);
+    matrix2.read(istream2);
+    matrix3=matrix1*matrix2;
+    REQUIRE( matrix3.Get_Stroki()== 3 );
+    REQUIRE( matrix3.Get_Stolbi() == 1 );
+    
+    ostringstream ostream;
+    matrix3.write( ostream );
+    
+    REQUIRE( input3 == ostream.str());
+}
 
-int main() {
+TEST_CASE("a*=b matrix")
+{
+    string input1{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix1;
+    istringstream istream1{ input1 };
+    string input2{
+        "3,2\n"
+        "4 6\n"
+        "5 3\n"
+        "2 7" };
+    matrix_t matrix2;
+    istringstream istream2{ input2 };
+    string input3{
+        "3,2\n"
+        "11 16 \n"
+        "22 32 \n"
+        "33 48 " };
     
+    matrix1.read(istream1);
+    matrix2.read(istream2);
+    matrix1*=matrix2;
+    REQUIRE( matrix1.Get_Stroki()== 3 );
+    REQUIRE( matrix1.Get_Stolbi() == 2 );
     
+    ostringstream ostream;
+    matrix1.write( ostream );
     
-    matrix_t a(0,0),b(0,0);
-    ifstream f1,f2;
-    string name_file1="";
-    string name_file2="";
-    char op;
-    if(!get_name_matr(f1, f2,name_file1,name_file2,op)){
-        cout<<"An error has occured while reading input data"<<'\n';
-        return 0;
-    }
-    switch (op) {
-        case '+':{
-            a.read(f1);
-            b.read(f2);
-            
-            if (a.Get_Stolbi()==b.Get_Stolbi() && a.Get_Stroki()==b.Get_Stroki()) {
-                matrix_t c=a.add(b);
-                c.write(cout);
-            }
-            else  cout<<"An error has occured while reading input data"<<'\n';
-        }
-            break;
-        case '-':{
-            a.read(f1);
-            b.read(f2);
-            if (a.Get_Stolbi()==b.Get_Stolbi() && a.Get_Stroki()==b.Get_Stroki()) {
-                matrix_t c=(a.sub(b));
-                c.write(cout);
-            }
-            else  cout<<"An error has occured while reading input data"<<'\n';
-        }
-            break;
-        case '*':{
-            a.read(f1);
-            b.read(f2);
-            if(a.Get_Stolbi()==b.Get_Stroki()){
-                matrix_t c=(a.mul(b));
-                c.write(cout);
-            }
-            else  cout<<"An error has occured while reading input data"<<'\n';
-        }
-            break;
-        case 'T':{
-            a.read(f1);
-            matrix_t c=(a.trans());
-            c.write(cout);
-        }
-            break;
-        default:
-            cout<<"An error has occured while reading input data"<<'\n';
-            break;
-            
-    }
-    return 0;
+    REQUIRE( input3 == ostream.str());
+}
+
+TEST_CASE("a+=b matrix")
+{
+    string input1{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix1;
+    istringstream istream1{ input1 };
+    string input2{
+        "3,3\n"
+        "4 6 1\n"
+        "5 3 4\n"
+        "2 7 3" };
+    matrix_t matrix2;
+    istringstream istream2{ input2 };
+    string input3{
+        "3,3\n"
+        "5 7 2\n"
+        "7 5 6\n"
+        "5 10 6" };
+    
+    matrix1.read(istream1);
+    matrix2.read(istream2);
+    matrix1+=matrix2;
+    REQUIRE( matrix1.Get_Stroki()== 3 );
+    REQUIRE( matrix1.Get_Stolbi() == 3 );
+    
+    ostringstream ostream;
+    matrix1.write( ostream );
+    
+    REQUIRE( input3 == ostream.str());
+}
+
+TEST_CASE("a-=b matrix")
+{
+    string input1{
+        "3,3\n"
+        "1 1 1\n"
+        "2 2 2\n"
+        "3 3 3" };
+    matrix_t matrix1;
+    istringstream istream1{ input1 };
+    string input2{
+        "3,3\n"
+        "4 6 1\n"
+        "5 3 4\n"
+        "2 7 3" };
+    matrix_t matrix2;
+    istringstream istream2{ input2 };
+    string input3{
+        "3,3\n"
+        "-3 -5 0\n"
+        "-3 -1 -2\n"
+        "1 -4 0" };
+    
+    matrix1.read(istream1);
+    matrix2.read(istream2);
+    matrix1-=matrix2;
+    REQUIRE( matrix1.Get_Stroki()== 3 );
+    REQUIRE( matrix1.Get_Stolbi() == 3 );
+    
+    ostringstream ostream;
+    matrix1.write( ostream );
+    
+    REQUIRE( input3 == ostream.str());
 }
 
